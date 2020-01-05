@@ -1,0 +1,42 @@
+a
+b
+c
+d
+e
+f
+g
+h
+i
+j
+k
+l
+m
+n
+o
+q
+1
+2
+3
+4
+5
+6
+7
+8
+9
+I got this to compile by replacing all the ft_blah functions with their string.h equivalents. There are many problems.
+Strings in C are null terminated and so need an extra byte allocated to them for that null. If you want to allocate a string of a single character, you have to allocate two bytes.
+Next big problem is you keep trying to append to tmp but it only has a single byte allocated.  tmp needs to have more memory allocated to it as you go.
+
+On the theme of memory allocation, buffer is never returned so there's no need to allocate memory for it on the heap. It can simply on the stack instead and automatically free'd when the function returns.  char buffer[2] = "".
+
+You should be using strncat, not strcpy, to concatenate strings.
+
+It seems ft_strverif just copies the string? I don't know why you call it before calling strcpy which will just copy the string.  strcpy(tmp, ft_strverif(buffer)); means buffer is needlessly copied twice. Worse, that extra copy is never free'd so it will leak memory.
+
+I'd suggest eliminating tmp entirely and instead append directly to line. Use realloc to add more memory to line, probably best to add memory in chunks or double it every time for efficiency.
+
+If you're emulating getline note that getline takes the length of the already allocated line buffer for a reason. This lets line be reused in the while(getline...) loop without having to be free'd every loop iteration. In effect, line becomes a reusable buffer.
+
+Finally, always run with -Wall or even -Weverything if your compiler supports it. Fix all the warnings, even if they seem silly. Then, run your code using valgrind, it will tell you when you're using uninitialized memory or where you're leaking memory. Very, very helpful.
+
+Once all that's done, get_next_line becomes much simpler.
